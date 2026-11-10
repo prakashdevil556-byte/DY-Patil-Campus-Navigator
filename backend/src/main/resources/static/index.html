@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base target="_self">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DY Patil Campus Navigator – Smart Campus Location and Navigation System</title>
+    <meta name="description" content="Navigate the entire Dr. D. Y. Patil Educational Complex, Akurdi. Find institutions, buildings, classrooms, and shortest walking routes across the campus.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --navy: #0A1F3F;
+            --gold: #C5A55A;
+            --light-blue: #3B82F6;
+            --light-grey: #F1F5F9;
+            --dark-charcoal: #1E293B;
+            --white: #FFFFFF;
+        }
+        * { font-family: 'Inter', sans-serif; }
+        body { background: var(--light-grey); color: var(--dark-charcoal); }
+        .bg-navy { background: var(--navy); }
+        .bg-gold { background: var(--gold); }
+        .bg-light-grey { background: var(--light-grey); }
+        .text-gold { color: var(--gold); }
+        .text-navy { color: var(--navy); }
+        .border-gold { border-color: var(--gold); }
+        .hover\:bg-gold-light:hover { background: #D4B96A; }
+        .shadow-card { box-shadow: 0 10px 25px rgba(10,31,63,0.08); }
+        .shadow-lg-card { box-shadow: 0 20px 40px rgba(10,31,63,0.12); }
+        .transition-smooth { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .btn-primary {
+            background: var(--navy);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary:hover { background: #152d5a; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(10,31,63,0.25); }
+        .btn-gold {
+            background: var(--gold);
+            color: var(--navy);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-gold:hover { background: #D4B96A; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(197,165,90,0.35); }
+        .card-institution {
+            background: white;
+            border-radius: 1.25rem;
+            padding: 1.75rem;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+        .card-institution:hover {
+            border-color: var(--gold);
+            box-shadow: 0 12px 30px rgba(10,31,63,0.12);
+            transform: translateY(-4px);
+        }
+        .search-input {
+            border: 2px solid #E2E8F0;
+            border-radius: 9999px;
+            padding: 0.85rem 1.5rem 0.85rem 3rem;
+            width: 100%;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+            background: white;
+        }
+        .search-input:focus { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(197,165,90,0.15); }
+        .slide-in { animation: slideIn 0.5s ease-out forwards; opacity: 0; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-overlay { background: rgba(10,31,63,0.6); backdrop-filter: blur(4px); }
+        .nav-link { color: rgba(255,255,255,0.8); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover { color: var(--gold); }
+        .active-nav-link { color: var(--gold); border-bottom: 2px solid var(--gold); padding-bottom: 0.25rem; }
+        #sidebar { transform: translateX(-100%); }
+        #sidebar.open { transform: translateX(0); }
+        .graph-node {
+            width: 16px; height: 16px; background: var(--navy); border-radius: 50%;
+            position: absolute; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            cursor: pointer; transition: all 0.3s;
+        }
+        .graph-node:hover { transform: scale(1.4); background: var(--gold); }
+        .graph-node.selected { background: var(--gold); border-color: var(--navy); transform: scale(1.3); }
+        .path-line { stroke: var(--gold); stroke-width: 3; stroke-dasharray: 6,4; fill: none; }
+        .path-line-highlighted { stroke: #22C55E; stroke-width: 4; stroke-dasharray: none; }
+        .badge-category { background: #E2E8F0; color: var(--navy); font-size: 0.7rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .badge-engineering { background: #DBEAFE; color: #1E40AF; }
+        .badge-pharmacy { background: #D1FAE5; color: #065F46; }
+        .badge-architecture { background: #FEF3C7; color: #92400E; }
+        .badge-management { background: #E0E7FF; color: #3730A3; }
+        .badge-school { background: #FCE7F3; color: #9D174D; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--light-grey); }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 6px; }
+        .loading-spinner { border: 3px solid #E2E8F0; border-top: 3px solid var(--gold); border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* High-contrast hero: keep the photograph visible while making all copy readable. */
+        #home { isolation: isolate; background: #071a35; }
+        #home .hero-photo { position: absolute; inset: 0; z-index: -2; background-image: url('https://www.dypakurdipune.edu.in/bridge/images/home_images/campusmainimage_renamed_20240209235133.jpg'); background-size: cover; background-position: center 45%; opacity: .42; }
+        #home .hero-shade { position: absolute; inset: 0; z-index: -1; background: linear-gradient(110deg, rgba(5,18,40,.94) 0%, rgba(8,31,63,.82) 55%, rgba(5,18,40,.90) 100%); }
+        #home .hero-content { position: relative; z-index: 1; }
+        #home h2 { color: #fff !important; text-shadow: 0 3px 18px rgba(0,0,0,.35); }
+        #home h2 .text-gold { color: #e0bd68 !important; }
+        #home .hero-description { color: #f1f5f9 !important; text-shadow: 0 2px 8px rgba(0,0,0,.45); }
+        #home .hero-kicker { color: #f4d37f !important; background: rgba(5,18,40,.58) !important; border: 1px solid rgba(244,211,127,.35); }
+        .google-map-frame { display:block; width:100%; height:100%; min-height:420px; border:0; filter:saturate(1.04) contrast(1.02); }
+        .map-frame-wrap { height: min(68vh, 620px); min-height: 420px; }
+        @media (max-width: 640px) { .map-frame-wrap { height: 480px; min-height: 380px; } }
+    </style>
+</head>
+<body>
+
+    <!-- 🔹 HEADER / NAVBAR -->
+    <header class="bg-navy shadow-lg fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <!-- Square DYP logo & brand -->
+                <a href="#home" class="flex items-center gap-3" aria-label="DY Patil Campus Navigator home">
+                    <img src="/images/dyp-logo.png" alt="Dr. D. Y. Patil Educational Complex, Akurdi, Pune logo" class="h-12 w-12 sm:h-14 sm:w-14 object-contain rounded-lg bg-black shadow-md ring-1 ring-white/20">
+                    <span class="text-white font-semibold text-sm sm:text-base leading-tight">DY Patil<br><span class="text-gold">Campus Navigator</span></span>
+                </a>
+                <!-- Desktop Nav -->
+                <nav class="hidden md:flex items-center gap-6 lg:gap-8">
+                    <a href="#home" class="nav-link active-nav-link" data-nav="home">Home</a>
+                    <a href="#institutions" class="nav-link" data-nav="institutions">Institutions</a>
+                    <a href="#map" class="nav-link" data-nav="map">Campus Map</a>
+                    <a href="#navigate" class="nav-link" data-nav="navigate">Navigate</a>
+                    <a href="#about" class="nav-link" data-nav="about">About</a>
+                </nav>
+                <!-- Mobile menu button -->
+                <button id="menu-btn" class="md:hidden text-white p-2 rounded-lg hover:bg-white/10 transition" aria-label="Toggle menu">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 🔹 SIDEBAR (mobile) -->
+    <aside id="sidebar" class="fixed top-0 left-0 w-72 h-full bg-navy z-50 shadow-2xl transition-all duration-300 pt-20 px-6 overflow-y-auto">
+        <button id="sidebar-close" class="absolute top-4 right-4 text-white/60 hover:text-gold text-2xl" aria-label="Close sidebar">&times;</button>
+        <nav class="flex flex-col gap-4 mt-6">
+            <a href="#home" class="nav-link text-lg py-2 border-b border-white/10" data-nav-mobile="home">Home</a>
+            <a href="#institutions" class="nav-link text-lg py-2 border-b border-white/10" data-nav-mobile="institutions">Institutions</a>
+            <a href="#map" class="nav-link text-lg py-2 border-b border-white/10" data-nav-mobile="map">Campus Map</a>
+            <a href="#navigate" class="nav-link text-lg py-2 border-b border-white/10" data-nav-mobile="navigate">Navigate</a>
+            <a href="#about" class="nav-link text-lg py-2 border-b border-white/10" data-nav-mobile="about">About</a>
+        </nav>
+        <div class="mt-8 text-white/40 text-xs">
+            <i class="fas fa-map-marker-alt mr-1"></i> Sector 29, Akurdi, Pune
+        </div>
+    </aside>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/40 z-40 hidden"></div>
+
+    <!-- 🔹 HERO SECTION -->
+    <section id="home" class="relative pt-20 sm:pt-24 pb-12 sm:pb-20 overflow-hidden">
+        <div class="hero-photo" aria-hidden="true"></div>
+        <div class="hero-shade" aria-hidden="true"></div>
+        <div class="hero-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-16 text-center">
+            <div class="hero-kicker inline-flex items-center gap-2 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 text-sm font-semibold">
+                <i class="fas fa-university"></i> Dr. D. Y. Patil Educational Complex, Akurdi
+            </div>
+            <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-4">
+                Explore the Campus.<br>
+                <span class="text-gold">Find Your Destination.</span><br>
+                Navigate Smarter.
+            </h2>
+            <p class="hero-description text-base sm:text-lg max-w-2xl mx-auto mb-8">Complete campus navigation system for students, faculty, and visitors — covering all institutions across the 33-acre educational complex.</p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="#institutions" class="btn-primary text-base shadow-xl"><i class="fas fa-building"></i> Explore Institutions</a>
+                <a href="#navigate" class="btn-gold text-base shadow-xl"><i class="fas fa-route"></i> Find Shortest Route</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 🔹 INSTITUTIONS SECTION -->
+    <section id="institutions" class="py-12 sm:py-20 bg-light-grey">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <span class="text-gold font-semibold text-sm uppercase tracking-wider">Campus Directory</span>
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-navy mt-2">Explore All Institutions</h2>
+                <p class="text-gray-500 mt-2 max-w-xl mx-auto">Search or browse every college, school, and institute on campus.</p>
+            </div>
+            <!-- Search -->
+            <div class="relative max-w-lg mx-auto mb-8">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="search-institutions" class="search-input pl-12" placeholder="Search by name or abbreviation..." aria-label="Search institutions">
+            </div>
+            <!-- Institution Cards Grid -->
+            <div id="institution-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+    </section>
+
+    <!-- 🔹 CAMPUS MAP SECTION -->
+    <section id="map" class="py-12 sm:py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <span class="text-gold font-semibold text-sm uppercase tracking-wider">Interactive Map</span>
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-navy mt-2">Campus Map Overview</h2>
+                <p class="text-gray-500 mt-2 max-w-xl mx-auto">Illustrative network of campus institutions and connected walking paths.</p>
+            </div>
+            <div class="map-frame-wrap relative rounded-2xl shadow-lg-card overflow-hidden max-w-6xl mx-auto border border-slate-200 bg-slate-100">
+                <iframe
+                    class="google-map-frame"
+                    title="Google Maps view of Dr. D. Y. Patil Educational Complex, Akurdi, Pune"
+                    src="https://www.google.com/maps?q=Dr.%20D.%20Y.%20Patil%20Educational%20Complex%2C%20Akurdi%2C%20Pune&output=embed"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    allowfullscreen>
+                </iframe>
+            </div>
+            <div class="max-w-6xl mx-auto mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p class="text-center sm:text-left text-slate-500 text-sm">Live Google Maps view of the campus area. Use the map controls to zoom, switch map layers and explore nearby roads.</p>
+                <a class="btn-primary text-sm" href="https://www.google.com/maps/search/?api=1&query=Dr.+D.+Y.+Patil+Educational+Complex%2C+Akurdi%2C+Pune" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marked-alt"></i> Open in Google Maps</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 🔹 NAVIGATE – SHORTEST PATH -->
+    <section id="navigate" class="py-12 sm:py-20 bg-light-grey">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <span class="text-gold font-semibold text-sm uppercase tracking-wider">Shortest Route</span>
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-navy mt-2">Find Shortest Path</h2>
+                <p class="text-gray-500 mt-2 max-w-xl mx-auto">Select two campus locations to calculate the shortest walking route.</p>
+            </div>
+            <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-card p-6 sm:p-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-navy mb-1"><i class="fas fa-circle text-gold mr-1"></i> From</label>
+                        <select id="from-location" class="w-full border-2 border-gray-200 rounded-xl p-3 outline-none focus:border-gold transition" aria-label="From location"></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-navy mb-1"><i class="fas fa-circle text-green-500 mr-1"></i> To</label>
+                        <select id="to-location" class="w-full border-2 border-gray-200 rounded-xl p-3 outline-none focus:border-gold transition" aria-label="To location"></select>
+                    </div>
+                </div>
+                <button id="find-path-btn" class="btn-primary w-full justify-center text-base shadow-lg"><i class="fas fa-route"></i> Find Shortest Route</button>
+                <div id="path-result" class="mt-6 hidden">
+                    <div class="bg-green-50 border border-green-200 rounded-xl p-4 text-sm">
+                        <p class="font-semibold text-green-800"><i class="fas fa-check-circle mr-1"></i> Shortest Route Found</p>
+                        <p id="path-details" class="mt-1 text-green-700"></p>
+                    </div>
+                </div>
+                <div id="path-error" class="mt-6 hidden">
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm">
+                        <p class="font-semibold text-red-800"><i class="fas fa-exclamation-circle mr-1"></i> Route unavailable</p>
+                        <p class="mt-1 text-red-600">Please select two different locations or check the backend connection.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 🔹 ABOUT SECTION -->
+    <section id="about" class="py-12 sm:py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <span class="text-gold font-semibold text-sm uppercase tracking-wider">About Campus</span>
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-navy mt-2">Dr. D. Y. Patil Educational Complex</h2>
+            </div>
+            <div class="max-w-3xl mx-auto space-y-4 text-gray-600 text-sm sm:text-base leading-relaxed">
+                <p>Located in Sector 29, Nigdi Pradhikaran, Akurdi, Pune, the Dr. D. Y. Patil Educational Complex is a premier multidisciplinary campus spanning approximately 33 acres. It houses a wide range of institutions including engineering, pharmacy, architecture, management, schools, junior colleges, and a private international university.</p>
+                <p>The campus is well-connected by road and public transport, situated along the old Mumbai-Pune highway with easy access from the Akurdi railway station and major bus routes.</p>
+                <p>Our mission is to provide a centralized digital navigation platform for students, faculty, staff, and visitors to easily locate any institution, department, lab, or facility within the complex.</p>
+                <div class="flex flex-wrap justify-center gap-6 mt-6 text-navy">
+                    <div class="text-center"><i class="fas fa-building text-gold text-2xl"></i><p class="font-semibold mt-1">14+ Institutions</p></div>
+                    <div class="text-center"><i class="fas fa-globe-asia text-gold text-2xl"></i><p class="font-semibold mt-1">33 Acres</p></div>
+                    <div class="text-center"><i class="fas fa-users text-gold text-2xl"></i><p class="font-semibold mt-1">25,000+ Students</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 🔹 FOOTER -->
+    <footer class="bg-navy text-white py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <a href="#home" class="flex items-center gap-3" aria-label="Back to home">
+                    <img src="/images/dyp-logo.png" alt="Dr. D. Y. Patil Educational Complex logo" class="h-12 w-12 sm:h-14 sm:w-14 object-contain rounded-lg bg-black shadow-md ring-1 ring-white/20">
+                    <span class="font-semibold leading-tight">DY Patil<br><span class="text-gold">Campus Navigator</span></span>
+                </a>
+                <p class="text-gray-400 text-xs text-center">© 2026 DY Patil Campus Navigator. Campus photograph: <a class="underline" href="https://www.dypakurdipune.edu.in/" target="_blank" rel="noopener">official DYP Akurdi website</a>.</p>
+                <div class="flex gap-4 text-gray-400">
+                    <a href="https://www.dypakurdipune.edu.in/" target="_blank" rel="noopener" class="hover:text-gold transition"><i class="fas fa-external-link-alt"></i> Official Site</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 🔹 MODAL for institution details -->
+    <div id="modal-overlay" class="fixed inset-0 z-50 modal-overlay hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl p-6 sm:p-8 relative animate__animated animate__fadeInUp">
+            <button id="modal-close" class="absolute top-4 right-4 text-gray-400 hover:text-navy text-2xl transition">&times;</button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // ──────────────────────────────────────────────────────────────
+        // 1. DATA LAYER
+        // ──────────────────────────────────────────────────────────────
+
+        // Institution records are loaded from the Java Spring Boot API.
+        let institutions = [];
+        const API_BASE_URL = window.location.port === "8080" ? "/api" : "http://localhost:8080/api";
+
+        // Campus map is displayed using the live Google Maps embed in the map section.
+
+        const navItems = [
+            { id: "home", label: "Home", icon: "fas fa-home" },
+            { id: "institutions", label: "Institutions", icon: "fas fa-building" },
+            { id: "map", label: "Campus Map", icon: "fas fa-map" },
+            { id: "navigate", label: "Navigate", icon: "fas fa-route" },
+            { id: "about", label: "About", icon: "fas fa-info-circle" }
+        ];
+
+        // ──────────────────────────────────────────────────────────────
+        // 2. RENDER FUNCTIONS
+        // ──────────────────────────────────────────────────────────────
+
+        function getBadgeClass(cat) {
+            const map = { engineering: "badge-engineering", pharmacy: "badge-pharmacy", architecture: "badge-architecture", management: "badge-management", school: "badge-school" };
+            return map[cat] || "badge-engineering";
+        }
+
+        function renderInstitutionCard(inst) {
+            const badge = getBadgeClass(inst.categoryBadge);
+            return `
+                <div class="card-institution slide-in" data-id="${inst.id}">
+                    <div class="flex items-start gap-4">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
+                            <img src="${inst.image}" alt="${inst.name}" class="w-full h-full object-cover" loading="lazy">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="badge-category ${badge}">${inst.category}</span>
+                                <span class="text-xs text-gray-400 font-mono">${inst.short}</span>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-bold text-navy mt-1 leading-snug">${inst.name}</h3>
+                            <p class="text-gray-500 text-xs sm:text-sm mt-1 line-clamp-2">${inst.description}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                        <span class="text-xs text-gray-400"><i class="fas fa-map-pin mr-1 text-gold"></i>${inst.building}</span>
+                        <button class="text-sm font-semibold text-gold hover:text-navy transition view-details-btn" data-id="${inst.id}">View Details <i class="fas fa-arrow-right ml-1"></i></button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderInstitutionCards(list) {
+            return list.map(inst => renderInstitutionCard(inst)).join("");
+        }
+
+        function renderNavLinks(items) {
+            return items.map(item => `<a href="#${item.id}" class="nav-link" data-nav="${item.id}">${item.label}</a>`).join("");
+        }
+
+        function renderSelectOptions(list) {
+            return list.map(inst => `<option value="${inst.id}">${inst.short} – ${inst.name}</option>`).join("");
+        }
+
+        function renderModalContent(inst) {
+            const badge = getBadgeClass(inst.categoryBadge);
+            return `
+                <div class="flex flex-col sm:flex-row gap-6">
+                    <div class="w-full sm:w-48 h-48 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
+                        <img src="${inst.image}" alt="${inst.name}" class="w-full h-full object-cover" loading="lazy">
+                    </div>
+                    <div class="flex-1">
+                        <span class="badge-category ${badge}">${inst.category}</span>
+                        <h3 class="text-xl sm:text-2xl font-bold text-navy mt-2">${inst.name}</h3>
+                        <p class="text-gray-500 text-sm mt-3">${inst.description}</p>
+                        <hr class="my-4 border-gray-100">
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div><span class="font-semibold text-navy">Building:</span> ${inst.building}</div>
+                            <div><span class="font-semibold text-navy">Floors:</span> ${inst.floors}</div>
+                            <div><span class="font-semibold text-navy">Departments:</span> ${inst.departments}</div>
+                            <div><span class="font-semibold text-navy">Labs:</span> ${inst.labs}</div>
+                            <div class="col-span-2"><span class="font-semibold text-navy">Facilities:</span> ${inst.facilities}</div>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mt-4">
+                            <button class="btn-primary text-sm navigate-from-btn" data-id="${inst.id}"><i class="fas fa-location-dot"></i> Navigate From Here</button>
+                            <button class="btn-gold text-sm navigate-to-btn" data-id="${inst.id}"><i class="fas fa-route"></i> Route To Here</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // 3. DIJKSTRA SHORTEST PATH
+        // ──────────────────────────────────────────────────────────────
+
+        function dijkstra(graph, startId, endId) {
+            if (startId === endId) return { distance: 0, path: [startId] };
+            const distances = {};
+            const prev = {};
+            const visited = new Set();
+            const nodes = Object.keys(graph);
+            nodes.forEach(n => { distances[n] = Infinity; prev[n] = null; });
+            distances[startId] = 0;
+
+            while (visited.size < nodes.length) {
+                let minNode = null;
+                let minDist = Infinity;
+                for (let n of nodes) {
+                    if (!visited.has(n) && distances[n] < minDist) {
+                        minDist = distances[n];
+                        minNode = n;
+                    }
+                }
+                if (minNode === null || minDist === Infinity) break;
+                visited.add(minNode);
+                if (minNode === endId) break;
+                const neighbors = graph[minNode];
+                for (let nbr in neighbors) {
+                    if (visited.has(nbr)) continue;
+                    const alt = distances[minNode] + neighbors[nbr];
+                    if (alt < distances[nbr]) {
+                        distances[nbr] = alt;
+                        prev[nbr] = minNode;
+                    }
+                }
+            }
+
+            if (distances[endId] === Infinity) return { distance: Infinity, path: [] };
+            const path = [];
+            let node = endId;
+            while (node) {
+                path.unshift(node);
+                node = prev[node];
+            }
+            return { distance: distances[endId], path };
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // 4. MOUNT
+        // ──────────────────────────────────────────────────────────────
+
+        document.addEventListener("DOMContentLoaded", async function() {
+
+            // Load the live institution directory from Spring Boot.
+            const grid = document.getElementById("institution-grid");
+            try {
+                const response = await fetch(`${API_BASE_URL}/locations`);
+                if (!response.ok) throw new Error(`Server returned ${response.status}`);
+                institutions = (await response.json()).map(location => ({ ...location, short: location.shortName }));
+            } catch (error) {
+                console.error("Could not load campus locations:", error);
+                grid.innerHTML = `<div class="col-span-full rounded-xl bg-red-50 p-5 text-red-700">Could not connect to the Java backend. Start Spring Boot using <strong>mvn spring-boot:run</strong>, then refresh this page.</div>`;
+                return;
+            }
+
+            // Mount institution cards
+            grid.innerHTML = renderInstitutionCards(institutions);
+
+            // Mount select options
+            const fromSelect = document.getElementById("from-location");
+            const toSelect = document.getElementById("to-location");
+            const optionsHtml = renderSelectOptions(institutions);
+            fromSelect.innerHTML = optionsHtml;
+            toSelect.innerHTML = optionsHtml;
+
+            // ──────────────────────────────────────────────────────────
+            // 5. EVENT DELEGATION
+            // ──────────────────────────────────────────────────────────
+
+            // Navigation: scroll & active state
+            document.addEventListener("click", function(e) {
+                const link = e.target.closest("a[href^='#']");
+                if (!link) return;
+                e.preventDefault();
+                const target = link.getAttribute("href");
+                if (target === "#") return;
+                document.querySelector(target)?.scrollIntoView({ behavior: "smooth" });
+
+                // Close sidebar if open
+                const sidebar = document.getElementById("sidebar");
+                if (sidebar.classList.contains("open")) {
+                    sidebar.classList.remove("open");
+                    document.getElementById("sidebar-overlay").classList.add("hidden");
+                }
+
+                // Update active nav (both desktop and mobile)
+                document.querySelectorAll(".nav-link, .nav-link-mobile").forEach(a => a.classList.remove("active-nav-link"));
+                const navId = target.replace("#", "");
+                document.querySelectorAll(`[data-nav="${navId}"], [data-nav-mobile="${navId}"]`).forEach(a => a.classList.add("active-nav-link"));
+            });
+
+            // Mobile menu toggle
+            document.getElementById("menu-btn").addEventListener("click", function() {
+                const sidebar = document.getElementById("sidebar");
+                sidebar.classList.toggle("open");
+                document.getElementById("sidebar-overlay").classList.toggle("hidden");
+            });
+            document.getElementById("sidebar-close").addEventListener("click", function() {
+                document.getElementById("sidebar").classList.remove("open");
+                document.getElementById("sidebar-overlay").classList.add("hidden");
+            });
+            document.getElementById("sidebar-overlay").addEventListener("click", function() {
+                document.getElementById("sidebar").classList.remove("open");
+                this.classList.add("hidden");
+            });
+
+            // Search institutions
+            document.getElementById("search-institutions").addEventListener("input", function() {
+                const query = this.value.trim().toLowerCase();
+                const filtered = institutions.filter(inst =>
+                    inst.name.toLowerCase().includes(query) ||
+                    inst.short.toLowerCase().includes(query)
+                );
+                grid.innerHTML = filtered.length ? renderInstitutionCards(filtered) : `<div class="col-span-full text-center py-10 text-gray-400"><i class="fas fa-search text-2xl mb-2"></i><p>No institutions found for "${query}"</p></div>`;
+            });
+
+            // Institution card click -> show modal (delegated)
+            grid.addEventListener("click", function(e) {
+                const card = e.target.closest(".card-institution");
+                const btn = e.target.closest(".view-details-btn");
+                if (btn && card) {
+                    showDetailsModal(btn.dataset.id);
+                } else if (card) {
+                    const id = card.dataset.id;
+                    if (id) showDetailsModal(id);
+                }
+            });
+
+            // Modal close
+            document.getElementById("modal-close").addEventListener("click", closeModal);
+            document.getElementById("modal-overlay").addEventListener("click", function(e) {
+                if (e.target === this) closeModal();
+            });
+
+            // Navigate from/to buttons in modal (delegated)
+            document.getElementById("modal-content").addEventListener("click", function(e) {
+                const fromBtn = e.target.closest(".navigate-from-btn");
+                const toBtn = e.target.closest(".navigate-to-btn");
+                if (fromBtn) {
+                    const id = fromBtn.dataset.id;
+                    closeModal();
+                    document.getElementById("from-location").value = id;
+                    document.getElementById("navigate").scrollIntoView({ behavior: "smooth" });
+                }
+                if (toBtn) {
+                    const id = toBtn.dataset.id;
+                    closeModal();
+                    document.getElementById("to-location").value = id;
+                    document.getElementById("navigate").scrollIntoView({ behavior: "smooth" });
+                }
+            });
+
+            // Find shortest path
+            document.getElementById("find-path-btn").addEventListener("click", async function() {
+                const from = document.getElementById("from-location").value;
+                const to = document.getElementById("to-location").value;
+                const resultDiv = document.getElementById("path-result");
+                const errorDiv = document.getElementById("path-error");
+                const details = document.getElementById("path-details");
+
+                resultDiv.classList.add("hidden");
+                errorDiv.classList.add("hidden");
+
+                if (from === to) {
+                    errorDiv.classList.remove("hidden");
+                    return;
+                }
+
+                const routeButton = this;
+                routeButton.disabled = true;
+                routeButton.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Calculating route...";
+                try {
+                    const response = await fetch(`${API_BASE_URL}/route?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+                    const res = await response.json();
+                    if (!response.ok) throw new Error(res.message || "No route found between these locations.");
+                    const pathIds = (res.path || []).map(location => location.id);
+                    if (pathIds.length === 0) throw new Error("No route found between these locations.");
+
+                    const fromInst = institutions.find(i => i.id === from);
+                    const toInst = institutions.find(i => i.id === to);
+                    const pathNames = (res.path || []).map(location => location.shortName || location.name);
+                    const originText = `${fromInst ? fromInst.name : from}, Dr. D. Y. Patil Educational Complex, Akurdi, Pune`;
+                    const destinationText = `${toInst ? toInst.name : to}, Dr. D. Y. Patil Educational Complex, Akurdi, Pune`;
+                    const googleDirections = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(originText)}&destination=${encodeURIComponent(destinationText)}&travelmode=walking`;
+                    details.innerHTML = `<strong>Route:</strong> ${pathNames.join(" → ")}<br><strong>Total Distance:</strong> ${res.distanceMeters} meters<br><strong>From:</strong> ${fromInst ? fromInst.name : from}<br><strong>To:</strong> ${toInst ? toInst.name : to}<br><span class="text-xs">Calculated by Java backend using Dijkstra's Algorithm.</span><br><a class="inline-flex items-center gap-2 mt-3 font-semibold underline" style="color:#0A1F3F" href="${googleDirections}" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marked-alt"></i> View walking directions in Google Maps</a>`;
+                    resultDiv.classList.remove("hidden");
+                    errorDiv.classList.add("hidden");
+                } catch (error) {
+                    errorDiv.querySelector(".text-red-800").innerHTML = "<i class='fas fa-exclamation-circle mr-1'></i> Route unavailable";
+                    errorDiv.querySelector(".text-red-600").textContent = error.message || "Could not connect to the backend.";
+                    errorDiv.classList.remove("hidden");
+                } finally {
+                    routeButton.disabled = false;
+                    routeButton.innerHTML = "<i class='fas fa-route'></i> Find Shortest Route";
+                }
+            });
+
+            // ──────────────────────────────────────────────────────────
+            // 6. HELPER FUNCTIONS
+            // ──────────────────────────────────────────────────────────
+
+            function showDetailsModal(id) {
+                const inst = institutions.find(i => i.id === id);
+                if (!inst) return;
+                document.getElementById("modal-content").innerHTML = renderModalContent(inst);
+                document.getElementById("modal-overlay").classList.remove("hidden");
+                document.body.style.overflow = "hidden";
+            }
+
+            function closeModal() {
+                document.getElementById("modal-overlay").classList.add("hidden");
+                document.body.style.overflow = "";
+            }
+
+
+            // Scroll reveal animation with IntersectionObserver
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = "1";
+                        entry.target.style.transform = "translateY(0)";
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll(".slide-in").forEach(el => {
+                el.style.opacity = "0";
+                el.style.transform = "translateY(20px)";
+                el.style.transition = "all 0.5s ease-out";
+                observer.observe(el);
+            });
+
+            // Set active nav on scroll
+            const sections = document.querySelectorAll("section[id]");
+            window.addEventListener("scroll", function() {
+                let current = "home";
+                sections.forEach(section => {
+                    const top = section.offsetTop - 120;
+                    if (window.scrollY >= top) {
+                        current = section.id;
+                    }
+                });
+                document.querySelectorAll(".nav-link, .nav-link-mobile").forEach(a => a.classList.remove("active-nav-link"));
+                document.querySelectorAll(`[data-nav="${current}"], [data-nav-mobile="${current}"]`).forEach(a => a.classList.add("active-nav-link"));
+            });
+        });
+    </script>
+
+</body>
+</html>

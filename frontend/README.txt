@@ -1,0 +1,1 @@
+This is the same integrated frontend as the Spring Boot static page. For normal use, run the backend and open http://localhost:8080. You can alternatively open this file with VS Code Live Server while the backend is running.
