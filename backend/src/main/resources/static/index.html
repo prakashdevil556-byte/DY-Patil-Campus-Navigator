@@ -318,7 +318,9 @@
 
         // Institution records are loaded from the Java Spring Boot API.
         let institutions = [];
-        const API_BASE_URL = window.location.port === "8080" ? "/api" : "http://localhost:8080/api";
+        
+const API_BASE_URL = "/api";
+
 
         // Campus map is displayed using the live Google Maps embed in the map section.
 
