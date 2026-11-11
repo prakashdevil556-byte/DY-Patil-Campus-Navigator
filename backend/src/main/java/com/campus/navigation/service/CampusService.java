@@ -18,7 +18,7 @@ public class CampusService {
             case "dycoph" -> "https://dypakurdipune.edu.in/bridge/images/institutes_imges/colg-pharmacy.png";
             case "dyioph" -> "https://dypakurdipune.edu.in/bridge/images/institutes_imges/institute-of-pharma.png";
             case "dycoarc" -> "https://dypakurdipune.edu.in/bridge/images/institutes_imges/architechure.png";
-            case "dycaac" -> "https://www.collegebatch.com/static/clg-gallery/dr-d-y-patil-college-of-applied-arts-crafts-pune-292544.jpg";
+            case "dycaac" -> "https://www.dypcaac.ac.in/images/Gallery/8.jpg";
             case "dycabm" -> "https://dypakurdipune.edu.in/bridge/images/institutes_imges/agriculture.png";
             case "dymcam" -> "https://dypakurdipune.edu.in/bridge/images/institutes_imges/computer-application.png";
             case "dypgdm" -> "https://dypakurdipune.edu.in/bridge/images/institutes_imges/pgdmi.png";
@@ -47,6 +47,10 @@ public class CampusService {
         add("dydschool", "D. Y. Patil Dnyanshanti School", "DYDS", "School", "school", "School offering primary and secondary education.", "Primary, Secondary", "School Block", "G+2", "Science Lab, Computer Lab, Maths Lab", "Library, Playground, Activity Centre", 60, 55, 0);
         add("dypacad", "D. Y. Patil Academy", "DYPA", "School", "school", "Academy offering pre-primary and primary education.", "Pre-Primary, Primary", "Academy Wing", "G+1", "Early Learning Lab, Computer Lab", "Indoor Play Area, Library, Art Room", 70, 50, 0);
 
+        // Campus facilities available as independent navigation destinations.
+        add("main-gate", "Main Gate", "MAIN GATE", "Campus Facility", "management", "Main entrance of the Dr. D. Y. Patil Educational Complex, Akurdi.", "Campus Entry", "Main Entrance", "Ground", "Not applicable", "Campus access, Visitor entry", 8, 12, 0);
+        add("canteen", "Campus Canteen", "CANTEEN", "Campus Facility", "management", "Campus dining facility for students, staff and visitors.", "Dining", "Campus Canteen", "Ground", "Not applicable", "Food and refreshments, Seating", 27, 43, 0);
+
         // Sample walking-distance graph transcribed from the supplied frontend prototype.
         // Replace these estimates with verified campus walking measurements before deployment.
         connect("dycoe", "dyiembr", 300); connect("dycoe", "ybppoly", 500); connect("dycoe", "dypiu", 200);
@@ -59,6 +63,17 @@ public class CampusService {
         connect("dycabm", "dymcam", 300); connect("dycabm", "dypgdm", 250); connect("dymcam", "dypgdm", 200);
         connect("dypgdm", "dyacsjc", 350); connect("dypgdm", "dypacad", 500);
         connect("dyacsjc", "dydschool", 200); connect("dydschool", "dypacad", 300);
+
+        // Approximate walking links for the additional campus facilities.
+        // Replace these sample distances with measured on-campus walking distances when available.
+        connect("main-gate", "dycoe", 250);
+        connect("main-gate", "ybppoly", 350);
+        connect("main-gate", "dypiu", 400);
+        connect("canteen", "dycoe", 180);
+        connect("canteen", "ybppoly", 220);
+        connect("canteen", "dymcam", 260);
+        connect("canteen", "dycabm", 300);
+        connect("canteen", "dycaac", 280);
     }
 
     private void add(String id, String name, String shortName, String category, String badge,

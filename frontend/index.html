@@ -119,9 +119,18 @@
         #home h2 .text-gold { color: #e0bd68 !important; }
         #home .hero-description { color: #f1f5f9 !important; text-shadow: 0 2px 8px rgba(0,0,0,.45); }
         #home .hero-kicker { color: #f4d37f !important; background: rgba(5,18,40,.58) !important; border: 1px solid rgba(244,211,127,.35); }
-        .google-map-frame { display:block; width:100%; height:100%; min-height:420px; border:0; filter:saturate(1.04) contrast(1.02); }
-        .map-frame-wrap { height: min(68vh, 620px); min-height: 420px; }
-        @media (max-width: 640px) { .map-frame-wrap { height: 480px; min-height: 380px; } }
+        .campus-reference-map { position:relative; width:100%; max-width:760px; margin:0 auto; aspect-ratio:648 / 978; background:#f8fafc; }
+        .campus-reference-map img { display:block; width:100%; height:100%; object-fit:fill; }
+        .campus-reference-map svg { display:block; width:100%; height:100%; }
+        .campus-map-marker { cursor:default; }
+        #path-result { scroll-margin-top: 112px; }
+        #path-details { color:#0f172a; font-size:15px; line-height:1.65; }
+        #path-details li { background:#fff; border:1px solid #dbe3ee; border-radius:10px; padding:10px 12px; overflow-wrap:anywhere; }
+        #path-details li strong { color:#0a1f3f; }
+        .campus-route-line { filter: drop-shadow(0 1px 2px rgba(0,0,0,.28)); }
+        .campus-map-marker text { font-family:Inter,Arial,sans-serif; paint-order:stroke; stroke:#fff; stroke-width:2.5px; stroke-linejoin:round; }
+        .google-map-frame { display:block; width:100%; height:clamp(520px, 72vh, 900px); border:0; }
+        @media (max-width: 640px) { .google-map-frame { height:68vh; min-height:460px; } .campus-reference-map { max-width:100%; } }
     </style>
 </head>
 <body>
@@ -212,20 +221,21 @@
             <div class="text-center mb-10">
                 <span class="text-gold font-semibold text-sm uppercase tracking-wider">Interactive Map</span>
                 <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-navy mt-2">Campus Map Overview</h2>
-                <p class="text-gray-500 mt-2 max-w-xl mx-auto">Illustrative network of campus institutions and connected walking paths.</p>
+                <p class="text-gray-500 mt-2 max-w-xl mx-auto">Live, zoomable Google Maps view of Dr. D. Y. Patil Educational Complex, Akurdi, Pune.</p>
             </div>
-            <div class="map-frame-wrap relative rounded-2xl shadow-lg-card overflow-hidden max-w-6xl mx-auto border border-slate-200 bg-slate-100">
+            <div class="w-full mx-auto rounded-2xl shadow-lg-card overflow-hidden border border-slate-200 bg-slate-100">
                 <iframe
+                    id="campus-map-overview"
                     class="google-map-frame"
-                    title="Google Maps view of Dr. D. Y. Patil Educational Complex, Akurdi, Pune"
-                    src="https://www.google.com/maps?q=Dr.%20D.%20Y.%20Patil%20Educational%20Complex%2C%20Akurdi%2C%20Pune&output=embed"
+                    title="Interactive Google Map of Dr. D. Y. Patil Educational Complex, Akurdi, Pune"
+                    src="https://maps.google.com/maps?q=Dr.%20D.%20Y.%20Patil%20Educational%20Complex%2C%20Akurdi%2C%20Pune&t=&z=17&ie=UTF8&iwloc=&output=embed"
                     loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade"
-                    allowfullscreen>
+                    allowfullscreen
+                    referrerpolicy="no-referrer-when-downgrade">
                 </iframe>
             </div>
-            <div class="max-w-6xl mx-auto mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p class="text-center sm:text-left text-slate-500 text-sm">Live Google Maps view of the campus area. Use the map controls to zoom, switch map layers and explore nearby roads.</p>
+            <div class="w-full mx-auto mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p class="text-center sm:text-left text-slate-500 text-sm">Explore the original Google Map above. Use the map controls or your mouse wheel to zoom and move around.</p>
                 <a class="btn-primary text-sm" href="https://www.google.com/maps/search/?api=1&query=Dr.+D.+Y.+Patil+Educational+Complex%2C+Akurdi%2C+Pune" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marked-alt"></i> Open in Google Maps</a>
             </div>
         </div>
@@ -239,7 +249,9 @@
                 <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-navy mt-2">Find Shortest Path</h2>
                 <p class="text-gray-500 mt-2 max-w-xl mx-auto">Select two campus locations to calculate the shortest walking route.</p>
             </div>
-            <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-card p-6 sm:p-8">
+            <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-card p-6 sm:p-8">
+                <div class="flex flex-col gap-6">
+                  <div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                     <div>
                         <label class="block text-sm font-semibold text-navy mb-1"><i class="fas fa-circle text-gold mr-1"></i> From</label>
@@ -251,17 +263,30 @@
                     </div>
                 </div>
                 <button id="find-path-btn" class="btn-primary w-full justify-center text-base shadow-lg"><i class="fas fa-route"></i> Find Shortest Route</button>
-                <div id="path-result" class="mt-6 hidden">
-                    <div class="bg-green-50 border border-green-200 rounded-xl p-4 text-sm">
-                        <p class="font-semibold text-green-800"><i class="fas fa-check-circle mr-1"></i> Shortest Route Found</p>
-                        <p id="path-details" class="mt-1 text-green-700"></p>
-                    </div>
-                </div>
                 <div id="path-error" class="mt-6 hidden">
                     <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm">
                         <p class="font-semibold text-red-800"><i class="fas fa-exclamation-circle mr-1"></i> Route unavailable</p>
                         <p class="mt-1 text-red-600">Please select two different locations or check the backend connection.</p>
                     </div>
+                </div>
+                  </div>
+                  <div class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                      <div><p class="font-bold text-navy">Full Campus Map</p><p class="text-xs text-slate-500">All campus buildings and facilities are shown below. The selected route will be highlighted here.</p></div>
+                      <span class="text-xs text-slate-500"><i class="fas fa-circle text-navy mr-1"></i> Buildings</span>
+                    </div>
+                    <div id="campus-map-view" class="rounded-xl border border-slate-100 bg-slate-50 overflow-hidden" aria-label="Campus map showing all named buildings"></div>
+                  </div>
+                  <div id="path-result" class="hidden rounded-xl border border-green-200 bg-green-50 p-4">
+                    <div class="flex items-center justify-between gap-3 mb-3">
+                      <p class="font-bold text-green-900"><i class="fas fa-check-circle mr-1"></i> Fastest walking path</p>
+                      <span id="route-distance" class="text-sm font-semibold text-green-800 whitespace-nowrap"></span>
+                    </div>
+                    <div id="route-map" class="hidden" aria-hidden="true"></div>
+                    <p class="text-xs uppercase tracking-wide font-bold text-slate-500 mb-2">Follow these locations</p>
+                    <ol id="path-details" class="space-y-2 text-sm text-slate-700"></ol>
+                    <p class="text-xs text-slate-500 mt-3">Route calculated by Dijkstra's shortest-path algorithm. Distances are estimates from the campus route network.</p>
+                  </div>
                 </div>
             </div>
         </div>
@@ -318,9 +343,9 @@
 
         // Institution records are loaded from the Java Spring Boot API.
         let institutions = [];
-        const API_BASE_URL = window.location.port === "8080" ? "/api" : "http://localhost:8080/api";
+        const API_BASE_URL = "/api";
 
-        // Campus map is displayed using the live Google Maps embed in the map section.
+        // Google Maps is used for the overview; the supplied clean road image is used in the route finder.
 
         const navItems = [
             { id: "home", label: "Home", icon: "fas fa-home" },
@@ -345,7 +370,7 @@
                 <div class="card-institution slide-in" data-id="${inst.id}">
                     <div class="flex items-start gap-4">
                         <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
-                            <img src="${inst.image}" alt="${inst.name}" class="w-full h-full object-cover" loading="lazy">
+                            <img src="${inst.image}" alt="${inst.name}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null;this.src='https://www.dypcaac.ac.in/images/Gallery/8.jpg';">
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
@@ -365,7 +390,17 @@
         }
 
         function renderInstitutionCards(list) {
-            return list.map(inst => renderInstitutionCard(inst)).join("");
+            // Main Gate and Canteen are campus facilities, not institution directory cards.
+            // Keep them in the full locations data for maps and route finding.
+            const institutionDirectoryList = list.filter(inst => {
+                const id = String(inst.id || "").toLowerCase().replace(/[_\s]/g, "-");
+                const shortName = String(inst.short || inst.shortName || "").toLowerCase().trim();
+                const name = String(inst.name || "").toLowerCase().trim();
+                return id !== "main-gate" && id !== "canteen" &&
+                       shortName !== "main gate" && shortName !== "canteen" &&
+                       name !== "main gate" && name !== "canteen";
+            });
+            return institutionDirectoryList.map(inst => renderInstitutionCard(inst)).join("");
         }
 
         function renderNavLinks(items) {
@@ -381,7 +416,7 @@
             return `
                 <div class="flex flex-col sm:flex-row gap-6">
                     <div class="w-full sm:w-48 h-48 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
-                        <img src="${inst.image}" alt="${inst.name}" class="w-full h-full object-cover" loading="lazy">
+                        <img src="${inst.image}" alt="${inst.name}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null;this.src='https://www.dypcaac.ac.in/images/Gallery/8.jpg';">
                     </div>
                     <div class="flex-1">
                         <span class="badge-category ${badge}">${inst.category}</span>
@@ -402,6 +437,139 @@
                     </div>
                 </div>
             `;
+        }
+
+        // Pixel positions are aligned to the supplied 648 x 978 campus-road reference image.
+        // Dnyanshanti School is deliberately placed across the main entrance area, as shown in the reference.
+        // Marker coordinates follow the exact road/building arrangement in the supplied reference image.
+        // Coordinates are in the image's native 648 x 978 pixel space.
+        const campusMarkerPositions = {
+            "main-gate": [220, 420],
+            "dydschool": [235, 260],
+            "dypacad": [310, 490],
+            "dycoe": [125, 660],
+            "dyiembr": [505, 405],
+            "ybppoly": [180, 845],
+            "dypiu": [480, 500],
+            "dycoph": [520, 665],
+            "dyioph": [510, 765],
+            "dycoarc": [505, 165],
+            "dycaac": [100, 770],
+            "dycabm": [615, 78],
+            "dymcam": [510, 250],
+            "dypgdm": [420, 845],
+            "dyacsjc": [300, 845],
+            "canteen": [570, 845]
+        };
+
+        // Walking-road network traced approximately along the visible roads in the supplied campus map.
+        // Each institution connects to the nearest mapped road junction; routes follow these road segments
+        // instead of drawing straight lines across buildings and open areas.
+        const campusRoadNodes = {
+            gate:[220,420], a:[260,450], b:[300,440], c:[340,470], d:[355,510], e:[330,545], f:[285,555], h:[250,525], i:[240,480],
+            w1:[160,520], w2:[100,610], w3:[10,700], w4:[10,820], w5:[80,890], w6:[220,900], w7:[220,760], w8:[180,650],
+            n1:[390,380], n2:[420,300], n3:[450,250], n4:[590,330], n5:[505,165], n6:[615,78],
+            r1:[420,500], r2:[420,600], r3:[420,790], r4:[580,790], r5:[580,900], r6:[450,920],
+            t1:[250,300], t2:[220,350], t3:[220,250], t4:[250,150], t5:[220,70], t6:[150,25], t7:[70,40], t8:[30,100], t9:[30,220],
+            inner1:[220,570], inner2:[220,680], inner3:[270,740], inner4:[300,790], east1:[520,615], east2:[510,665], east3:[510,765],
+            south1:[300,900], south2:[380,900]
+        };
+        const campusRoadEdges = [
+            ['gate','a'],['a','b'],['b','c'],['c','d'],['d','e'],['e','f'],['f','h'],['h','i'],['i','a'],
+            ['gate','w1'],['w1','w2'],['w2','w3'],['w3','w4'],['w4','w5'],['w5','w6'],['w6','south1'],['south1','south2'],['south2','r6'],['r6','r5'],['r5','r4'],['r4','r3'],
+            ['h','inner1'],['inner1','inner2'],['inner2','w7'],['w7','w6'],['inner2','w8'],['w8','w2'],['w7','inner3'],['inner3','inner4'],['inner4','r3'],
+            ['c','n1'],['n1','n2'],['n2','n3'],['n3','n4'],['n3','n5'],['n5','n6'],['n1','r1'],['r1','r2'],['r2','r3'],['r2','east1'],['east1','east2'],['east2','east3'],['east3','r3'],
+            ['gate','t2'],['t2','t1'],['t1','t3'],['t3','t4'],['t4','t5'],['t5','t6'],['t6','t7'],['t7','t8'],['t8','t9'],['t9','t3'],
+            ['f','inner1'],['e','r1']
+        ];
+        const locationRoadAccess = {
+            'main-gate':'gate','dydschool':'t1','dypacad':'b','dycoe':'w2','dyiembr':'n1','ybppoly':'w6','dypiu':'r1',
+            'dycoph':'east2','dyioph':'east3','dycoarc':'n5','dycaac':'w4','dycabm':'n6','dymcam':'n4',
+            'dypgdm':'r3','dyacsjc':'south1','canteen':'r4'
+        };
+
+        function getCampusRoadRoute(startId, endId) {
+            const startNode = locationRoadAccess[startId], endNode = locationRoadAccess[endId];
+            if (!startNode || !endNode) return [];
+            const adjacency = {};
+            Object.keys(campusRoadNodes).forEach(id => adjacency[id] = []);
+            campusRoadEdges.forEach(([a,b]) => {
+                const p=campusRoadNodes[a], q=campusRoadNodes[b];
+                const weight=Math.hypot(q[0]-p[0],q[1]-p[1]);
+                adjacency[a].push({id:b,weight}); adjacency[b].push({id:a,weight});
+            });
+            const dist={}, prev={}, pending=new Set(Object.keys(campusRoadNodes));
+            Object.keys(campusRoadNodes).forEach(id=>dist[id]=Infinity);
+            dist[startNode]=0;
+            while(pending.size){
+                let current=null, best=Infinity;
+                pending.forEach(id=>{if(dist[id]<best){best=dist[id];current=id;}});
+                if(current===null) break;
+                pending.delete(current);
+                if(current===endNode) break;
+                adjacency[current].forEach(edge=>{
+                    if(pending.has(edge.id) && best+edge.weight<dist[edge.id]){dist[edge.id]=best+edge.weight;prev[edge.id]=current;}
+                });
+            }
+            if(!Number.isFinite(dist[endNode])) return [];
+            const ids=[]; let cursor=endNode;
+            while(cursor){ids.unshift(cursor); if(cursor===startNode) break; cursor=prev[cursor];}
+            const start=campusMarkerPositions[startId], end=campusMarkerPositions[endId];
+            return [...(start?[start]:[]), ...ids.map(id=>campusRoadNodes[id]), ...(end?[end]:[])];
+        }
+
+        function renderCampusMap(routePath = []) {
+            const map = document.getElementById("campus-map-view");
+            if (!institutions.length || !map) return;
+            const routeIds = new Set(routePath.map(location => location.id));
+            const startId = routePath[0]?.id, endId = routePath[routePath.length - 1]?.id;
+            const routePoints = routePath.length > 1 ? getCampusRoadRoute(startId, endId) : [];
+            const routeLine = routePoints.map(point => point.join(",")).join(" ");
+            const markers = institutions.map(location => {
+                const point = campusMarkerPositions[location.id];
+                if (!point) return "";
+                const [x, y] = point;
+                const active = routeIds.has(location.id);
+                const isStart = startId === location.id;
+                const isEnd = endId === location.id;
+                const label = (location.shortName || location.name || "").replace(/[&<>\"']/g, "");
+                const width = Math.min(150, Math.max(48, label.length * 7.1 + 18));
+                const left = Math.max(width / 2 + 3, Math.min(645 - width / 2, x));
+                const fill = isStart ? "#0A1F3F" : isEnd ? "#A87916" : active ? "#1D4ED8" : "#ffffff";
+                const textFill = (isStart || isEnd || active) ? "#ffffff" : "#17324d";
+                const dotFill = isStart ? "#0A1F3F" : isEnd ? "#A87916" : active ? "#1D4ED8" : "#D69E2E";
+                return `<g class="campus-map-marker"><circle cx="${x}" cy="${y}" r="10" fill="${dotFill}" stroke="#ffffff" stroke-width="3"/><circle cx="${x}" cy="${y}" r="3" fill="#ffffff"/><rect x="${left - width/2}" y="${y + 13}" width="${width}" height="25" rx="7" fill="${fill}" fill-opacity=".98" stroke="${active ? '#F4C95D' : '#ffffff'}" stroke-width="${active ? 2.5 : 1.5}"/><text x="${left}" y="${y + 30}" text-anchor="middle" font-size="12.5" font-weight="700" fill="${textFill}" stroke="none">${label}</text></g>`;
+            }).join("");
+            const svg = `${routeLine ? `<polyline class="campus-route-line" points="${routeLine}" fill="none" stroke="#F4B400" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity=".98"/>` : ""}${markers}`;
+            map.innerHTML = `<div class="campus-reference-map"><img src="images/campus-map-reference.jpeg" alt="Campus road map showing the main campus road, Dnyanshanti School Road and circular entrance" loading="eager"><svg viewBox="0 0 648 978" preserveAspectRatio="none" class="absolute inset-0" role="img" aria-label="Campus buildings with named location dots and walking route following campus roads">${svg}</svg></div>`;
+        }
+
+        function renderRouteSteps(path) {
+            const details = document.getElementById("path-details");
+            details.innerHTML = path.map((location, index) => `
+                <li class="flex items-start gap-3">
+                    <span class="flex-shrink-0 w-7 h-7 rounded-full ${index === 0 ? "bg-navy text-white" : index === path.length - 1 ? "bg-gold text-navy" : "bg-slate-200 text-slate-700"} flex items-center justify-center text-xs font-bold">${index + 1}</span>
+                    <span class="pt-1"><strong>${index === 0 ? "Start: " : index === path.length - 1 ? "Destination: " : "Continue to: "}</strong>${location.name}</span>
+                </li>
+            `).join("");
+
+            // A compact route sketch based on the campus coordinates returned by the backend.
+            const points = path.map(location => ({
+                x: 10 + Number(location.x || 0) * 1.12,
+                y: 8 + Number(location.y || 0) * 0.78,
+                label: location.shortName || location.name
+            }));
+            const polyline = points.map(point => `${point.x},${point.y}`).join(" ");
+            const circles = points.map((point, index) => `
+                <circle cx="${point.x}" cy="${point.y}" r="3.1" fill="${index === 0 ? "#0A1F3F" : index === points.length - 1 ? "#C5A55A" : "#3B82F6"}" stroke="white" stroke-width="1.5"></circle>
+                <text x="${point.x}" y="${Math.max(5, point.y - 5)}" text-anchor="middle" font-size="3.4" font-weight="600" fill="#1E293B">${point.label.replace(/[&<>"]/g, "")}</text>
+            `).join("");
+            document.getElementById("route-map").innerHTML = `
+                <svg viewBox="0 0 100 65" role="img" aria-label="Illustrative shortest route map" class="w-full" style="max-height:190px">
+                    <polyline points="${polyline}" fill="none" stroke="#C5A55A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.5 1.5"></polyline>
+                    ${circles}
+                </svg>
+                <div class="flex justify-between text-xs text-slate-500 mt-1"><span><i class="fas fa-circle text-navy mr-1"></i>Start</span><span><i class="fas fa-circle text-yellow-600 mr-1"></i>Destination</span></div>`;
         }
 
         // ──────────────────────────────────────────────────────────────
@@ -468,8 +636,9 @@
                 return;
             }
 
-            // Mount institution cards
+            // Mount institution cards and the always-visible campus map.
             grid.innerHTML = renderInstitutionCards(institutions);
+            renderCampusMap();
 
             // Mount select options
             const fromSelect = document.getElementById("from-location");
@@ -565,6 +734,9 @@
                 }
             });
 
+            // Keep the full campus map visible; clear only the previous route when selections change.
+            [fromSelect, toSelect].forEach(select => select.addEventListener("change", () => renderCampusMap()));
+
             // Find shortest path
             document.getElementById("find-path-btn").addEventListener("click", async function() {
                 const from = document.getElementById("from-location").value;
@@ -593,13 +765,16 @@
 
                     const fromInst = institutions.find(i => i.id === from);
                     const toInst = institutions.find(i => i.id === to);
-                    const pathNames = (res.path || []).map(location => location.shortName || location.name);
                     const originText = `${fromInst ? fromInst.name : from}, Dr. D. Y. Patil Educational Complex, Akurdi, Pune`;
                     const destinationText = `${toInst ? toInst.name : to}, Dr. D. Y. Patil Educational Complex, Akurdi, Pune`;
                     const googleDirections = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(originText)}&destination=${encodeURIComponent(destinationText)}&travelmode=walking`;
-                    details.innerHTML = `<strong>Route:</strong> ${pathNames.join(" → ")}<br><strong>Total Distance:</strong> ${res.distanceMeters} meters<br><strong>From:</strong> ${fromInst ? fromInst.name : from}<br><strong>To:</strong> ${toInst ? toInst.name : to}<br><span class="text-xs">Calculated by Java backend using Dijkstra's Algorithm.</span><br><a class="inline-flex items-center gap-2 mt-3 font-semibold underline" style="color:#0A1F3F" href="${googleDirections}" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marked-alt"></i> View walking directions in Google Maps</a>`;
+                    renderRouteSteps(res.path || []);
+                    renderCampusMap(res.path || []);
+                    document.getElementById("route-distance").textContent = `${res.distanceMeters} m`;
+                    document.getElementById("route-map").insertAdjacentHTML("beforeend", `<a class="inline-flex items-center gap-2 mt-3 font-semibold underline text-sm" style="color:#0A1F3F" href="${googleDirections}" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marked-alt"></i> Open walking directions</a>`);
                     resultDiv.classList.remove("hidden");
                     errorDiv.classList.add("hidden");
+                    requestAnimationFrame(() => resultDiv.scrollIntoView({ behavior: "smooth", block: "start" }));
                 } catch (error) {
                     errorDiv.querySelector(".text-red-800").innerHTML = "<i class='fas fa-exclamation-circle mr-1'></i> Route unavailable";
                     errorDiv.querySelector(".text-red-600").textContent = error.message || "Could not connect to the backend.";
